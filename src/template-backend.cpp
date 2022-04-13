@@ -132,6 +132,44 @@ namespace
         }
     };
 
+ /**
+  ** Modifiers
+  **/
+ 
+    class ShowNonprintable : public ctemplate::TemplateModifier
+    {
+    public:
+        virtual void Modify(const char* in, size_t inlen,
+                            const ctemplate::PerExpandData* per_expand_data,
+                            ctemplate::ExpandEmitter* out,
+                            const std::string& arg) const
+        {
+            //static std::string show_nonprintable( std::string in_str ) 
+            //{
+            char const hex_chars[16] = { '0', '1', '2', '3', '4', '5', '6', '7', 
+                                        '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+        
+            //for ( int i = 0 ;i < in_str.length() ; i++ ) 
+            for ( const char* pos = in; pos < in + inlen; ++pos )
+            {
+                //char const byte = *pos;
+                //u_int posbyte = (u_int)*pos
+                
+                if( *pos > 31 && *pos < 127 && *pos != 34 ) out->Emit(*pos); //34 = Double Quote
+                else 
+                {
+                    out->Emit('[');
+                    out->Emit( hex_chars[ ( *pos & 0xF0 ) >> 4 ] );
+                    out->Emit( hex_chars[ ( *pos & 0x0F ) >> 0 ] );
+                    out->Emit(']');
+                }
+                
+            }
+            //out->Emit(']');
+        }
+    };
+
+
     // CSV escaping as per RFC4180.
     class CSVEscapeModifier : public ctemplate::TemplateModifier
     {
@@ -145,7 +183,7 @@ namespace
 
             for ( const char* pos = in; pos < in + inlen; ++pos )
             {
-                if ( *pos == '"' || *pos == ',' ||
+                if ( *pos == '"' || *pos == ',' ||  *pos == ';' ||
                      *pos == '\r' || *pos == '\n' )
                 {
                     need_escape = true;
@@ -158,9 +196,16 @@ namespace
                 out->Emit('"');
                 for ( const char* pos = in; pos < in + inlen; ++pos )
                 {
-                    if ( *pos == '"' )
+                    if ( *pos == '"' ){
                         out->Emit('"');
-                    out->Emit(*pos);
+                        out->Emit(*pos);
+                    }
+                    else if ( *pos == '\n' ){
+                        out->Emit('\\');
+                        out->Emit('n');
+                    }
+                    else out->Emit(*pos);
+
                 }
                 out->Emit('"');
             }
@@ -334,6 +379,7 @@ namespace
 
     CStringModifier cStringModifier;
     HexStringModifier hexStringModifier;
+    ShowNonprintable showNonprintable;
     CSVEscapeModifier csvEscapeModifier;
     IPAddrModifier ipaddrModifier;
     IP6AddrModifier ip6addrModifier;
@@ -351,6 +397,7 @@ namespace
     {
         ctemplate::AddModifier("x-cstring", &cStringModifier);
         ctemplate::AddModifier("x-hexstring", &hexStringModifier);
+        ctemplate::AddModifier("x-shownonprintable", &showNonprintable);
         ctemplate::AddModifier("x-csvescape", &csvEscapeModifier);
         ctemplate::AddModifier("x-ipaddr", &ipaddrModifier);
         ctemplate::AddModifier("x-ip6addr", &ip6addrModifier);
