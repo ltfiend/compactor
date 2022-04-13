@@ -594,6 +594,80 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
 
     std::string out;
 
+//      if ( qr.response_answers ) {
+//           output << "          Response Answers:    Type    Class    Name\n";
+//           for ( const auto& r : *qr.response_answers )
+//           {
+//               if ( r.rtype )
+//                   output << "\t\t             " << std::right << std::setw(6) << Configuration::find_rrtype_string(*r.rtype);
+//               if ( r.rclass )
+//                   output << "      "<< static_cast<unsigned>(*r.rclass);
+//               if ( r.name )
+//                   output << "      " << CaptureDNS::decode_domain_name(*r.name) << "\n";
+
+    if ( qr.response_answers ) {
+        //dict.SetValue("answer_dname", ToString(CaptureDNS::decode_domain_name(dns->answers().front().dname())) );
+        // dict.SetIntValue("answer_length", *qr.response_answers.size())
+        
+        std::string answertypes; 
+        std::string authtypes; 
+        std::string addttypes; 
+        std::string answerdata;
+        std::string authdata;
+        std::string addtdata;
+        std::string teststr; 
+        
+        for ( const auto& a : *qr.response_answers ) {
+            answertypes = answertypes + "," + Configuration::find_rrtype_string(*a.rtype);
+            answerdata = answerdata + "," + CaptureDNS::decode_domain_name(*a.name);
+        }
+
+        if ( qr.response_authorities) {
+            for ( const auto& a : *qr.response_authorities )
+            {
+                authtypes = authtypes + "," + Configuration::find_rrtype_string(*a.rtype);
+               authdata = authdata + "," + CaptureDNS::decode_domain_name(*a.name);
+            }
+        }
+        if ( qr.response_additionals ) {
+            for ( const auto& a : *qr.response_additionals )
+            {
+                addttypes = addttypes + "," + Configuration::find_rrtype_string(*a.rtype);
+                addtdata = addtdata + "," + CaptureDNS::decode_domain_name(*a.name);
+            }
+        }
+        
+        uint8_t slength;
+        answertypes.erase(0,1);
+        answerdata.erase(0,1);
+        if ( qr.response_authorities )
+        {
+            authtypes.erase(0,1);
+            authdata.erase(0,1);
+        }
+        if ( qr.response_additionals )
+        {
+            addttypes.erase(0,1);
+            addtdata.erase(0,1);
+        }
+        
+        dict.SetIntValue("answer_count", (*qr.response_answers).size());
+        dict.SetValue("answertypes", answertypes);
+        dict.SetValue("answerdata", answerdata);
+        if ( qr.response_authorities ) {
+            dict.SetIntValue("authority", (*qr.response_authorities).size());
+            dict.SetValue("authtypes", authtypes);
+            dict.SetValue("authdata", authdata);
+        }
+        if ( qr.response_additionals ) {
+            dict.SetIntValue("additional", (*qr.response_additionals).size());
+            dict.SetValue("addttypes", addttypes);
+            dict.SetValue("addtdata", addtdata);
+        }
+
+//
+    }
+
     if ( ctemplate::ExpandTemplate(opts_.template_name, ctemplate::DO_NOT_STRIP, &dict, &out) )
         writer_->writeBytes(out);
     else
