@@ -22,6 +22,8 @@
 
 #include "template-backend.hpp"
 
+#include <iostream>
+
 /**
  ** Modifiers
  **/
@@ -658,58 +660,94 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
         
         std::string answertypes; 
         std::string authtypes; 
-        std::string addttypes; 
+        std::string addtypes; 
+
         std::string answerdata;
         std::string authdata;
-        std::string addtdata;
+        std::string adddata;
+        
+        std::string answername;
+        std::string authname;
+        std::string addname;
+
+        std::string answerrclass;
+        std::string authrclass;
+        std::string addrclass;
+
+        std::string answerttl;
+        std::string authttl;
+        std::string addttl;
+
         std::string teststr; 
         
+
+                 //answertypes = answertypes + "," + ToString(a.query_type());
+
         for ( const auto& a : *qr.response_answers ) {
+            uint16_t qt = (*a.rtype);
             answertypes = answertypes + "," + Configuration::find_rrtype_string(*a.rtype);
-            answerdata = answerdata + "," + CaptureDNS::decode_domain_name(*a.name);
+            answerdata = answerdata + "," + CaptureDNS::decode_rdata(*a.rdata) ;
+            answername = answername + "," + CaptureDNS::decode_domain_name(*a.name);
+            answerrclass = answerrclass + "," + CaptureDNS::textualize_rr_data(qt, *a.rdata) ;;
+            //answerrclass = answerrclass + "," + to_string(static_cast<unsigned>(*a.rclass) );
+            //answerttl = answerttl + "," + CaptureDNS::decode_domain_name(std.to_string( *a.ttl ) );
         }
 
         if ( qr.response_authorities) {
             for ( const auto& a : *qr.response_authorities )
             {
-                authtypes = authtypes + "," + Configuration::find_rrtype_string(*a.rtype);
-               authdata = authdata + "," + CaptureDNS::decode_domain_name(*a.name);
+               authtypes = authtypes + "," + Configuration::find_rrtype_string(*a.rtype);
+               //authdata = authdata + "," + CaptureDNS::decode_domain_name(*a.rdata);
+               authname = authname + "," + CaptureDNS::decode_domain_name(*a.name);
+            //   authclass = authclass + "," + CaptureDNS::decode_domain_name(*a.class);
+            //   authdttl = authttl + "," + CaptureDNS::decode_domain_name(*a.ttl);
             }
         }
         if ( qr.response_additionals ) {
             for ( const auto& a : *qr.response_additionals )
             {
-                addttypes = addttypes + "," + Configuration::find_rrtype_string(*a.rtype);
-                addtdata = addtdata + "," + CaptureDNS::decode_domain_name(*a.name);
+                addtypes = addtypes + "," + Configuration::find_rrtype_string(*a.rtype);
+                //adddata = adddata + "," + CaptureDNS::decode_domain_name(*a.rdata);
+                addname = addname + "," + CaptureDNS::decode_domain_name(*a.name);
             }
         }
         
         uint8_t slength;
         answertypes.erase(0,1);
+        answername.erase(0,1);
         answerdata.erase(0,1);
+        answerrclass.erase(0,1);
+        answerttl.erase(0,1);
         if ( qr.response_authorities )
         {
             authtypes.erase(0,1);
+            authname.erase(0,1);
             authdata.erase(0,1);
         }
         if ( qr.response_additionals )
         {
-            addttypes.erase(0,1);
-            addtdata.erase(0,1);
+            addtypes.erase(0,1);
+            addname.erase(0,1);
+            adddata.erase(0,1);
         }
         
         dict.SetIntValue("answer_count", (*qr.response_answers).size());
         dict.SetValue("answertypes", answertypes);
+        dict.SetValue("answername", answername);
         dict.SetValue("answerdata", answerdata);
+        dict.SetValue("answerrclass", answerrclass);
+        dict.SetValue("answerttl", answerttl);
         if ( qr.response_authorities ) {
             dict.SetIntValue("authority", (*qr.response_authorities).size());
             dict.SetValue("authtypes", authtypes);
+            dict.SetValue("authname", authname);
             dict.SetValue("authdata", authdata);
         }
         if ( qr.response_additionals ) {
             dict.SetIntValue("additional", (*qr.response_additionals).size());
-            dict.SetValue("addttypes", addttypes);
-            dict.SetValue("addtdata", addtdata);
+            dict.SetValue("addttypes", addtypes);
+            dict.SetValue("addname", addname);
+            dict.SetValue("adddata", adddata);
         }
 
 //

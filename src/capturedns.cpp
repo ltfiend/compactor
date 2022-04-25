@@ -23,13 +23,23 @@
 
 #include "capturedns.hpp"
 
+#include "ipaddress.hpp"
+
+#include "queryresponse.hpp"
+
 using Tins::Memory::InputMemoryStream;
 using Tins::Memory::OutputMemoryStream;
+
+
+#include "configuration.hpp"
+
+
 
 namespace {
     const unsigned MAX_DNAME_LEN = 512;
     const unsigned DO_BIT = (1 << 15);
 }
+
 
 const std::vector<CaptureDNS::Opcode> CaptureDNS::OPCODES =
 {
@@ -123,6 +133,26 @@ const std::vector<CaptureDNS::QueryType> CaptureDNS::QUERYTYPES =
     TA,
     DLV
 };
+
+
+
+std::string CaptureDNS::resource::dnameStr() const
+{
+    return CaptureDNS::decode_domain_name(dname_);
+} 
+
+std::string CaptureDNS::resource::dataStr() const 
+{
+    return textualize_rr_data(type_, data_);
+} 
+
+//std::string CaptureDNS::resource::queryTypeStr()
+//{
+    //return Configuration::find_rrtype_string(type_);
+    //return  RR_TYPES_BY_NUM.find(uint16_t  2);
+//    return "TBD"
+//}
+
 
 CaptureDNS::NameCompression CaptureDNS::name_compression_ = CaptureDNS::DEFAULT;
 
@@ -285,6 +315,8 @@ uint16_t CaptureDNS::read_dname_offset(uint16_t offset, const uint8_t *buffer, u
     return end_offset_ptr - buffer + 1;
 }
 
+
+
 // Implementation taken from Libtins dns.cpp.
 std::string CaptureDNS::decode_domain_name(const byte_string& label)
 {
@@ -316,6 +348,45 @@ std::string CaptureDNS::decode_domain_name(const byte_string& label)
 
     return output;
 }
+
+
+
+//CJTC
+std::string CaptureDNS::decode_rdata(const byte_string& label)
+{
+    std::string output;
+    if ( label.empty() )
+        return output;
+
+    const uint8_t* ptr = label.data();
+    const uint8_t* end = ptr + label.size();
+    while ( *ptr )
+    {
+        // We can't handle offsets
+        //if ( (*ptr & 0xc0) )
+        //    throw Tins::invalid_domain_name();
+        //else
+        if (true)
+        {
+            // It's a label, grab its size.
+            uint8_t size = *ptr;
+            ptr++;
+            //if ( ptr + size > end )
+            //    throw Tins::malformed_packet();
+            
+            // Append a dot if it's not the first one.
+            if ( !output.empty() )
+                output.push_back('.');
+            output.append(reinterpret_cast<const char *>(ptr), size);
+            ptr += size;
+        }
+    }
+
+    return output;
+}
+
+
+
 
 // Implementation taken from Libtins dns.cpp.
 byte_string CaptureDNS::encode_domain_name(const std::string& name)
@@ -438,6 +509,70 @@ byte_string CaptureDNS::expand_rr_data(uint16_t query_type, uint16_t offset, uin
         throw Tins::malformed_packet();
     return res;
 }
+
+
+
+//std::string CaptureDNS::decode_rdata(rdata)
+//{
+//    std::string output;
+//    if ( rdata.empty() )
+//        return output;
+//
+//    const uint8_t* ptr = rdata.data();
+//    const uint8_t* end = ptr + rdata.size();
+//    while ( *ptr )
+//    {
+//        // We can't handle offsets
+//        //if ( (*ptr & 0xc0) )
+//        //    throw Tins::invalid_domain_name();
+//        //else
+//        if (true)
+//        {
+//            // It's a label, grab its size.
+//            uint8_t size = *ptr;
+//            ptr++;
+//            //if ( ptr + size > end )
+//            //    throw Tins::malformed_packet();
+//            
+//            // Append a dot if it's not the first one.
+//            if ( !output.empty() )
+//                output.push_back('.');
+//            output.append(reinterpret_cast<const char *>(ptr), size);
+//            ptr += size;
+//        }
+//    }
+//
+//    return output;
+//}
+
+//CJTC
+std::string CaptureDNS::textualize_rr_data(uint16_t query_type, byte_string data)
+{
+    std::string rdata;
+    byte_string tmp;
+
+    switch(query_type)
+    {
+    case CNAME:
+    case NS:
+    case PTR:
+        rdata = decode_domain_name(data.data());
+        break;
+    case A:
+    case AAAA:
+        {
+        byte_string d = data.data();
+        IPAddress addr(d);
+        rdata = addr.str();
+        break;
+        }
+    default:
+        rdata = "NA";
+        break;
+    }
+    return rdata;
+}
+
 
 namespace {
 

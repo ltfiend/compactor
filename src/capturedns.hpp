@@ -34,6 +34,45 @@
 #define private public
 #endif
 
+
+//CJTC
+#include <unordered_map>
+
+
+//#include "blockcborreader.hpp"
+//class DecodedResponseAnswer {
+//    public :
+//    std::string name;
+//    int type;
+//    std::string data;
+//    std::string rclass;
+//    int ttl;
+//
+//        /**
+//         * Constructs a Resource object.
+//         *
+//         * \param dname The domain name for which this records
+//         * provides an answer, in decoded form.
+//         * \param data The resource's payload.
+//         * \param type The type of this record.
+//         * \param rclass The class of this record.
+//         * \param ttl The time-to-live of this record.
+//         */
+//    //DecodedResponseAnswer(const QueryResponseData::RR& rr){
+//    //    name = CaptureDNS::decode_domain_name(rr.dname)
+////
+//    //}
+//
+//    std::string typeStr() {
+//        //type to string
+//    }
+//    std::string ttlStr() const
+//    {
+//        return std::to_string(ttl);
+//    }
+//}
+
+
 /**
  * \class CaptureDNS
  * \brief Represents a DNS PDU.
@@ -284,6 +323,12 @@ public:
         KNOT_1_6
     };
 
+
+    /**
+     * \brief convert rdata to string
+     */
+    std::string decode_rdata();
+
     /**
      * \brief Class that represent DNS queries.
      */
@@ -466,6 +511,121 @@ public:
         uint32_t ttl() const {
             return ttl_;
         }
+
+
+        /**
+         * \brief Returns name of a resource record as string
+         *
+         * \returns name as string
+         */
+        std::string dnameStr() const;
+
+        /**
+         * \brief Returns data of a resource record as string
+         *
+         * \returns data as string
+         */
+        std::string dataStr() const;
+
+        /**
+         * \brief Returns query type in name forate of a resource record as string
+         *
+         * \returns querytype as string
+         */
+        std::string queryTypeStr() const;
+
+        /**
+         * \brief Returns ttl of a resource record as string
+         *
+         * \returns ttl as string
+         */
+        std::string ttlStr() const
+        {
+            return std::to_string(ttl_);
+        }
+
+        const std::unordered_map<uint16_t , std::string> RR_TYPES_BY_NUM = {
+            { 1 , "A" },
+            { 2 , "NS" },
+            { 3 , "MD" },
+            { 4 , "MF" },
+            { 5 , "CNAME" },
+            { 6 , "SOA" },
+            { 7 , "MB" },
+            { 8 , "MG" },
+            { 9 , "MR" },
+            { 10 , "NULL_R" },
+            { 11 , "WKS" },
+            { 12 , "PTR" },
+            { 13 , "HINFO" },
+            { 14 , "MINFO" },
+            { 15 , "MX" },
+            { 16 , "TXT" },
+            { 17 , "RP" },
+            { 18 , "AFSDB" },
+            { 19 , "X25" },
+            { 20 , "ISDN" },
+            { 21 , "RT" },
+            { 22 , "NSAP" },
+            { 23 , "NSAP_PTR" },
+            { 24 , "SIG" },
+            { 25 , "KEY" },
+            { 26 , "PX" },
+            { 27 , "GPOS" },
+            { 28 , "AAAA" },
+            { 29 , "LOC" },
+            { 30 , "NXT" },
+            { 31, "EID" },
+            { 32 , "NIMLOC" },
+            { 33 , "SRV" },
+            { 34 , "ATMA" },
+            { 35 , "NAPTR" },
+            { 36 , "KX" },
+            { 37 , "CERTIFICATE" },
+            { 38 , "A6" },
+            { 39 , "DNAM" },
+            { 40 , "SINK" },
+            { 41 , "OPT" },
+            { 42 , "APL" },
+            { 43 , "DS" },
+            { 44 , "SSHFP" },
+            { 45 , "IPSECKEY" },
+            { 46 , "RRSIG" },
+            { 47 , "NSEC" },
+            { 48 , "DNSKEY" },
+            { 49 , "DHCID" },
+            { 50 , "NSEC3" },
+            { 51 , "NSEC3PARAM" },
+            { 52 , "TLSA" },
+            { 55 , "HIP" },
+            { 56 , "NINFO" },
+            { 57 , "RKEY" },
+            { 58 , "TALINK" },
+            { 59 , "CDS" },
+            { 99 , "SPF" },
+            { 100 , "UINFO" },
+            { 101 , "UID" },
+            { 102 , "GID" },
+            { 103 , "UNSPEC" },
+            { 104 , "NID" },
+            { 105 , "L32" },
+            { 106 , "L64" },
+            { 107 , "LP" },
+            { 108 , "EU148" },
+            { 109 , "EUI64" },
+            { 249  , "TKEY" },
+            { 250 , "TSIG" },
+            { 251 , "IXFR" },
+            { 252 , "AXFR" },
+            { 253 , "MAILB" },
+            { 254 , "MAILA" },
+            { 255 , "TYPE_ANY" },
+            { 256 , "URI" },
+            { 257 , "CAA" },
+            { 32768  , "TA" },
+            { 32769  , "DLV" },
+        };
+
 
     private:
         /**
@@ -1145,6 +1305,18 @@ public:
     static std::string decode_domain_name(const byte_string& label);
 
     /**
+     * \brief Convert a DNS rdata from label to printable format.
+     *
+     * The label must not be compressed.
+     *
+     * \param label the label to convert.
+     * \returns the printable rdata.
+     * \throws Tins::invalid_domain_name
+     */
+    static std::string decode_rdata(const byte_string& label);
+
+
+    /**
      * \brief Convert a DNS name from printable to label format.
      *
      * \param name the name to convert.
@@ -1171,6 +1343,8 @@ public:
     {
         name_compression_ = nc;
     }
+
+    static std::string textualize_rr_data(uint16_t query_type, byte_string data);
 
 private:
     /**
