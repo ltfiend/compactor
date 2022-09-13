@@ -26,8 +26,9 @@
 #include "configuration.hpp"
 #include "log.hpp"
 
-boost::asio::io_service io_service;
+//boost::asio::io_service io_service;
 
+namespace ip = boost::asio::ip;
 namespace po = boost::program_options;
 
 namespace {
@@ -300,7 +301,7 @@ Configuration::Configuration()
       query_timeout(5000), skew_timeout(10),
       snaplen(65535),
       promisc_mode(false),
-      hostname("thisworks"),
+      hostname("noHostname"),
 #if ENABLE_DNSTAP
       dnstap(false),
 #endif
@@ -325,6 +326,8 @@ Configuration::Configuration()
       positional_options_(),
       read_from_block_(false)
 {
+    hostname = ip::host_name();
+
     cmdline_options_.add_options()
         ("help,h", "show this help message.")
         ("version,v", "show version information.")
@@ -388,9 +391,9 @@ Configuration::Configuration()
         ("interface,i",
          po::value<std::vector<std::string>>(&network_interfaces),
          "network interface from which to capture.")
-        //("hostname,H",
-        // po::value<std::string>(&hostname),
-        // "hostname from which to capture.")
+        ("hostname,H",
+         po::value<std::string>(&hostname),
+         "hostname from which to capture.")
 #if ENABLE_DNSTAP
         ("dnstap,T",
          po::value<bool>(&dnstap)->implicit_value(true),
@@ -999,10 +1002,6 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
 
     // Set collection parameter items from configuration.
     query_timeout = cp.query_timeout;
-    char buf[_POSIX_HOST_NAME_MAX];
-    gethostname(buf, sizeof(buf));
-    buf[_POSIX_HOST_NAME_MAX - 1] = '\0';
-    std::string hostname = "DoesntWork";
     skew_timeout = cp.skew_timeout;
     snaplen = cp.snaplen;
     dns_port = cp.dns_port;
@@ -1012,8 +1011,6 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
     server_addresses = cp.server_addresses;
     vlan_ids = cp.vlan_ids;
     filter = cp.filter;
-
-    //hostname = ip::host_name();
 
     exclude_hints.check_config(*this);
 }
