@@ -749,6 +749,12 @@ public:
      */
     std::vector<std::string> network_interfaces;
 
+    /**
+     * \brief hostname
+     *
+     */
+    //std::string hostname;
+
 #if ENABLE_DNSTAP
     /**
      * \brief treat input files as DNSTAP.

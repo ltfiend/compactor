@@ -119,6 +119,7 @@ std::string RotatingFileName::baseFilename(const std::chrono::system_clock::time
             all_if.append(config.network_interfaces[i]);
         }
         sft_pattern = replace_config(sft_pattern, "interface", all_if);
+        sft_pattern = replace_config(sft_pattern, "hostname", all_if);
     }
 #if ENABLE_DNSTAP
     else if ( !config.dnstap_socket.empty() )

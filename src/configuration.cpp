@@ -18,6 +18,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/asio.hpp>
 
 #include <tins/network_interface.h>
 #include <tins/tins.h>
@@ -25,6 +26,10 @@
 #include "configuration.hpp"
 #include "log.hpp"
 
+boost::asio::io_service io_service;
+
+namespace ip = boost::asio::ip;
+ 
 namespace po = boost::program_options;
 
 namespace {
@@ -384,6 +389,9 @@ Configuration::Configuration()
         ("interface,i",
          po::value<std::vector<std::string>>(&network_interfaces),
          "network interface from which to capture.")
+        //("hostname,H",
+        // po::value<std::string>(&hostname),
+        // "hostname from which to capture.")
 #if ENABLE_DNSTAP
         ("dnstap,T",
          po::value<bool>(&dnstap)->implicit_value(true),
@@ -998,6 +1006,9 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
     server_addresses = cp.server_addresses;
     vlan_ids = cp.vlan_ids;
     filter = cp.filter;
+
+    //std::string hostname = ip::host_name();
+    hostname = ip::host_name();
 
     exclude_hints.check_config(*this);
 }
