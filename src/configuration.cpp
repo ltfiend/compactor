@@ -300,6 +300,7 @@ Configuration::Configuration()
       query_timeout(5000), skew_timeout(10),
       snaplen(65535),
       promisc_mode(false),
+      hostname("thisworks"),
 #if ENABLE_DNSTAP
       dnstap(false),
 #endif
@@ -998,7 +999,10 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
 
     // Set collection parameter items from configuration.
     query_timeout = cp.query_timeout;
-    hostname = cp.host_id;
+    char buf[_POSIX_HOST_NAME_MAX];
+    gethostname(buf, sizeof(buf));
+    buf[_POSIX_HOST_NAME_MAX - 1] = '\0';
+    std::string hostname = "DoesntWork";
     skew_timeout = cp.skew_timeout;
     snaplen = cp.snaplen;
     dns_port = cp.dns_port;

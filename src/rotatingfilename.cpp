@@ -125,6 +125,7 @@ std::string RotatingFileName::baseFilename(const std::chrono::system_clock::time
         sft_pattern = replace_config(sft_pattern, "interface", "dnstap");
 #endif
     sft_pattern = replace_config(sft_pattern, "hostname", config.hostname);
+//     sft_pattern = replace_config(sft_pattern, "hostname2", gethostname())
     sft_pattern = replace_config(sft_pattern, "rotate-period", config.rotation_period.count());
     sft_pattern = replace_config(sft_pattern, "snaplen", config.snaplen);
     sft_pattern = replace_config(sft_pattern, "query-timeout", config.query_timeout.count() / 1000.0);
