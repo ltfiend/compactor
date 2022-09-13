@@ -28,8 +28,6 @@
 
 boost::asio::io_service io_service;
 
-namespace ip = boost::asio::ip;
- 
 namespace po = boost::program_options;
 
 namespace {
@@ -615,8 +613,11 @@ void Configuration::dump_config(std::ostream& os) const
             os << "  Max output size      : " << max_output_size.size << "\n";
         os << "  File rotation period : " << rotation_period.count() << "\n";
     }
-    os << "  Promiscuous mode     : " << (promisc_mode ? "On" : "Off") << "\n"
-       << "  Capture interfaces   : ";
+    os << "  Promiscuous mode     : " << (promisc_mode ? "On" : "Off") << "\n";
+    os << "\n"
+       << "  Hostname             : ";
+    os << hostname << "\n";  
+    os << "  Capture interfaces   : ";
     for ( const auto& i : network_interfaces )
     {
         if ( first )
@@ -997,6 +998,7 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
 
     // Set collection parameter items from configuration.
     query_timeout = cp.query_timeout;
+    hostname = cp.host_id;
     skew_timeout = cp.skew_timeout;
     snaplen = cp.snaplen;
     dns_port = cp.dns_port;
@@ -1007,8 +1009,7 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
     vlan_ids = cp.vlan_ids;
     filter = cp.filter;
 
-    //std::string hostname = ip::host_name();
-    hostname = ip::host_name();
+    //hostname = ip::host_name();
 
     exclude_hints.check_config(*this);
 }

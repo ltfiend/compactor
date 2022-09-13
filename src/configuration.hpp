@@ -663,6 +663,12 @@ public:
     std::string output_pattern;
 
     /**
+     * \brief The Server's hostname
+     *
+     */
+    std::string hostname;
+
+    /**
      * \brief compress output data using gzip.
      */
     bool gzip_output;
@@ -749,11 +755,6 @@ public:
      */
     std::vector<std::string> network_interfaces;
 
-    /**
-     * \brief hostname
-     *
-     */
-    //std::string hostname;
 
 #if ENABLE_DNSTAP
     /**
